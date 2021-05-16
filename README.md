@@ -1,2 +1,2 @@
-# 모델 연구
+# Model Research
 real time - object detection, object classification, object tracking 
