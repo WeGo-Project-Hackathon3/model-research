@@ -1,4 +1,4 @@
-# Object Tracking
+# MobileNet V3 + SSD and  DeepSort
 
 ## Introduction
 
@@ -22,7 +22,7 @@ python object_tracking.py file_dir
 
 ### Files
 
-- object_tracking.py runs the MobileNet & DeepSORT based people tracking application. 
+- object_tracking.py runs the MobileNet & DeepSORT based people tracking application.
 
 - object_detection.py runs the object detection using MobileNet+SSD on a video stream.
 
@@ -34,12 +34,12 @@ python object_tracking.py file_dir
 
 Pre-trained Mobilenet file at https://tfhub.dev/google/openimages_v4/ssd/mobilenet_v2/1
 
-<a id="1">[1]</a> 
-M Sandler (2018). 
+<a id="1">[1]</a>
+M Sandler (2018).
 MobileNetV2: Inverted Residuals and Linear Bottlenecks [arxiv link](https://arxiv.org/abs/1801.04381)
 
-<a id="1">[2]</a> 
-N Wojke (2017). 
+<a id="1">[2]</a>
+N Wojke (2017).
 Simple Online and Realtime Tracking with a Deep Association Metric [arxiv link](https://arxiv.org/abs/1703.07402)
 
 <a id="1">[3]</a> https://github.com/nwojke/deep_sort
