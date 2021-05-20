@@ -4,8 +4,9 @@ sys.path.append('/home/ssac6/hackaton3/RealTimeObjectDetection/Tensorflow/models
 #from object_detection.builders import dataset_builder
 import object_detection
 import os
-import cv2 
+import cv2
 import numpy as np
+import pyrealsense2 as rs
 import tensorflow as tf
 from object_detection.utils import config_util
 from object_detection.utils import label_map_util
@@ -37,44 +38,76 @@ def detect_fn(image):
 
 def main():
     # Setup capture
-    cap = cv2.VideoCapture(0)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    #cap = cv2.VideoCapture(0)
+    # Configure depth and color streams
+    pipeline = rs.pipeline()
+    config = rs.config()
+    # Get device product line for setting a supporting resolution
+    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
+    pipeline_profile = config.resolve(pipeline_wrapper)
+    device = pipeline_profile.get_device()
+    device_product_line = str(device.get_info(rs.camera_info.product_line))
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    if device_product_line == 'L500':
+        config.enable_stream(rs.stream.color, 960, 540, rs.format.bgr8, 30)
+    else:
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+    # Start streaming
+    pipeline.start(config)
 
-    while True: 
-        ret, frame = cap.read()
-        image_np = np.array(frame)
-        
-        input_tensor = tf.convert_to_tensor(np.expand_dims(image_np, 0), dtype=tf.float32)
-        detections = detect_fn(input_tensor)
-        
-        num_detections = int(detections.pop('num_detections'))
-        detections = {key: value[0, :num_detections].numpy()
-                    for key, value in detections.items()}
-        detections['num_detections'] = num_detections
+    #width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    #height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    try :
+        while True:
+            frames = pipeline.wait_for_frames()
+            depth_frame = frames.get_depth_frame()
+            color_frame = frames.get_color_frame()
+            if not depth_frame or not color_frame:
+                continue
+            # Convert images to numpy arrays
+            depth_image = np.asanyarray(depth_frame.get_data())
+            color_image = np.asanyarray(color_frame.get_data())
+            # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+            # depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
+            # depth_colormap_dim = depth_colormap.shape
+            # color_colormap_dim = color_image.shape
 
-        # detection_classes should be ints.
-        detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
+            # #ret, frame = cap.read()
+            image_np = np.array(color_image)
 
-        label_id_offset = 1
-        image_np_with_detections = image_np.copy()
+            input_tensor = tf.convert_to_tensor(np.expand_dims(color_image, 0), dtype=tf.float32)
+            detections = detect_fn(input_tensor)
 
-        viz_utils.visualize_boxes_and_labels_on_image_array(
-                    image_np_with_detections,
-                    detections['detection_boxes'],
-                    detections['detection_classes']+label_id_offset,
-                    detections['detection_scores'],
-                    category_index,
-                    use_normalized_coordinates=True,
-                    max_boxes_to_draw=1,#5
-                    min_score_thresh=.3,#.5
-                    agnostic_mode=False)
+            num_detections = int(detections.pop('num_detections'))
+            detections = {key: value[0, :num_detections].numpy()
+                        for key, value in detections.items()}
+            detections['num_detections'] = num_detections
 
-        cv2.imshow('object detection',  cv2.resize(image_np_with_detections, (800, 600)))
-        
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            cap.release()
-            break    
+            # detection_classes should be ints.
+            detections['detection_classes'] = detections['detection_classes'].astype(np.int64)
 
+            label_id_offset = 1
+            image_np_with_detections = image_np.copy()
+
+            viz_utils.visualize_boxes_and_labels_on_image_array(
+                        image_np_with_detections,
+                        detections['detection_boxes'],
+                        detections['detection_classes']+label_id_offset,
+                        detections['detection_scores'],
+                        category_index,
+                        use_normalized_coordinates=True,
+                        max_boxes_to_draw=1,#5
+                        min_score_thresh=.3,#.5
+                        agnostic_mode=False)
+
+            cv2.imshow('object detection',  cv2.resize(image_np_with_detections, (800, 600)))
+            key = cv2.waitKey(1)
+            if key & 0xFF == ord('q') or key==27:
+                cv2.release()
+                #cv2.destroyAllWindows()
+                break
+    finally:
+    # Stop streaming
+        pipeline.stop()
 if __name__ == '__main__':
     main()        
