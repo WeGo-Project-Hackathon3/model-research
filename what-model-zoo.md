@@ -13,3 +13,7 @@ https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc
 (DeepLab: Deep Labelling for Semantic Image Segmentation)
 
 https://github.com/tensorflow/models/blob/master/research/deeplab/g3doc/model_zoo.md
+
+### Running TF2 Detection API Models on mobile
+
+https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/running_on_mobile_tf2.md
