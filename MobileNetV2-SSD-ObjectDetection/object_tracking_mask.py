@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append('/home/ssac6/hackaton3/RealTimeObjectDetection/Tensorflow/models/research/object_detection')
-#from object_detection.builders import dataset_builder
+#sys.path.append('/home/ssac6/hackaton3/RealTimeObjectDetection/Tensorflow/models/research/object_detection')
+
 import object_detection
 import os
 import cv2
@@ -110,4 +110,4 @@ def main():
     # Stop streaming
         pipeline.stop()
 if __name__ == '__main__':
-    main()        
+    main()
